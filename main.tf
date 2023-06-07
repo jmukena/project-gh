@@ -1,11 +1,11 @@
 # Configure and downloading plugins for aws
 provider "aws" {
-  region     = "${var.aws_region}"
+  region = var.aws_region
 }
 
 # Creating VPC
 resource "aws_vpc" "demovpc" {
-  cidr_block       = "${var.vpc_cidr}"
+  cidr_block       = var.vpc_cidr
   instance_tenancy = "default"
 
   tags = {
@@ -15,22 +15,22 @@ resource "aws_vpc" "demovpc" {
 
 # Creating Internet Gateway 
 resource "aws_internet_gateway" "demogateway" {
-  vpc_id = "${aws_vpc.demovpc.id}"
+  vpc_id = aws_vpc.demovpc.id
 }
 
 # Grant the internet access to VPC by updating its main route table
 resource "aws_route" "internet_access" {
-  route_table_id         = "${aws_vpc.demovpc.main_route_table_id}"
+  route_table_id         = aws_vpc.demovpc.main_route_table_id
   destination_cidr_block = "0.0.0.0/0"
-  gateway_id             = "${aws_internet_gateway.demogateway.id}"
+  gateway_id             = aws_internet_gateway.demogateway.id
 }
 
 # Creating 1st subnet 
 resource "aws_subnet" "demosubnet" {
-  vpc_id                  = "${aws_vpc.demovpc.id}"
-  cidr_block             = "${var.subnet_cidr}"
+  vpc_id                  = aws_vpc.demovpc.id
+  cidr_block              = var.subnet_cidr
   map_public_ip_on_launch = true
-  availability_zone = "us-east-1a"
+  availability_zone       = "us-east-1a"
 
   tags = {
     Name = "Demo subnet"
@@ -39,21 +39,21 @@ resource "aws_subnet" "demosubnet" {
 
 # Creating 2nd subnet 
 resource "aws_subnet" "demosubnet1" {
-  vpc_id                  = "${aws_vpc.demovpc.id}"
-  cidr_block             = "${var.subnet1_cidr}"
+  vpc_id                  = aws_vpc.demovpc.id
+  cidr_block              = var.subnet1_cidr
   map_public_ip_on_launch = true
-  availability_zone = "us-east-1b"
+  availability_zone       = "us-east-1b"
 
   tags = {
     Name = "Demo subnet 1"
   }
 }
 
-# Creating Security Group
+/* # Creating Security Group
 resource "aws_security_group" "demosg" {
   name        = "Demo Security Group"
   description = "Demo Module"
-  vpc_id      = "${aws_vpc.demovpc.id}"
+  vpc_id      = aws_vpc.demovpc.id
 
   # Inbound Rules
   # HTTP access from anywhere
@@ -87,7 +87,7 @@ resource "aws_security_group" "demosg" {
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
-  
+
   # Replication Port
   ingress {
     from_port   = 8089
@@ -120,31 +120,31 @@ resource "aws_security_group" "demosg" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
-}
+} */
 
 # Creating key pair
 resource "aws_key_pair" "demokey" {
-  key_name   = "${var.key_name}"
-  public_key = "${file(var.public_key)}"
+  key_name   = var.key_name
+  public_key = file(var.public_key)
 }
-  
+
 # Creating EC2 Instance
 resource "aws_instance" "demoinstance" {
 
   # AMI based on region 
-  ami = "${lookup(var.ami, var.aws_region)}"
+  ami = lookup(var.ami, var.aws_region)
 
   # Launching instance into subnet 
-  subnet_id = "${aws_subnet.demosubnet.id}"
+  subnet_id = aws_subnet.demosubnet.id
 
   # Instance type 
-  instance_type = "${var.instancetype}"
-  
+  instance_type = var.instancetype
+
   # Count of instance
-  count= "${var.master_count}"
-  
+  count = var.master_count
+
   # SSH key that we have generated above for connection
-  key_name = "${aws_key_pair.demokey.id}"
+  key_name = aws_key_pair.demokey.id
 
   # Attaching security group to our instance
   vpc_security_group_ids = ["${aws_security_group.demosg.id}"]
@@ -153,34 +153,34 @@ resource "aws_instance" "demoinstance" {
   tags = {
     Name = "Search-Head-${count.index + 1}"
   }
-  
+
   # Root Block Storage
   root_block_device {
     volume_size = "40"
     volume_type = "standard"
   }
-  
+
   #EBS Block Storage
   ebs_block_device {
-    device_name = "/dev/sdb"
-    volume_size = "80"
-    volume_type = "standard"
+    device_name           = "/dev/sdb"
+    volume_size           = "80"
+    volume_type           = "standard"
     delete_on_termination = false
   }
-  
+
   # SSH into instance 
   connection {
-    
+
     # Host name
     host = self.public_ip
     # The default username for our AMI
     user = "ec2-user"
     # Private key for connection
-    private_key = "${file(var.private_key)}"
+    private_key = file(var.private_key)
     # Type of connection
     type = "ssh"
   }
-  
+
   # Installing splunk on newly created instance
   provisioner "remote-exec" {
     inline = [
@@ -192,37 +192,34 @@ resource "aws_instance" "demoinstance" {
       "sudo yum install -y git",
       "sudo chmod 666 /var/run/docker.sock",
       "docker pull dhruvin30/dhsoniweb:v1",
-      "docker run -d -p 80:80 dhruvin30/dhsoniweb:latest"   
-  ]
- }
-}# Configure and downloading plugins for aws
-provider "aws" {
-  region     = "${var.aws_region}"
+      "docker run -d -p 80:80 dhruvin30/dhsoniweb:latest"
+    ]
+  }
 }
 
 # Creating VPC
-resource "aws_vpc" "demovpc" {
+/* resource "aws_vpc" "demovpc" {
   cidr_block       = "${var.vpc_cidr}"
   instance_tenancy = "default"
 
   tags = {
     Name = "Demo VPC"
   }
-}
+} */
 
-# Creating Internet Gateway 
+/* # Creating Internet Gateway 
 resource "aws_internet_gateway" "demogateway" {
   vpc_id = "${aws_vpc.demovpc.id}"
-}
+} */
 
-# Grant the internet access to VPC by updating its main route table
+/* # Grant the internet access to VPC by updating its main route table
 resource "aws_route" "internet_access" {
   route_table_id         = "${aws_vpc.demovpc.main_route_table_id}"
   destination_cidr_block = "0.0.0.0/0"
   gateway_id             = "${aws_internet_gateway.demogateway.id}"
-}
+} */
 
-# Creating 1st subnet 
+/* # Creating 1st subnet 
 resource "aws_subnet" "demosubnet" {
   vpc_id                  = "${aws_vpc.demovpc.id}"
   cidr_block             = "${var.subnet_cidr}"
@@ -232,9 +229,9 @@ resource "aws_subnet" "demosubnet" {
   tags = {
     Name = "Demo subnet"
   }
-}
+} */
 
-# Creating 2nd subnet 
+/* # Creating 2nd subnet 
 resource "aws_subnet" "demosubnet1" {
   vpc_id                  = "${aws_vpc.demovpc.id}"
   cidr_block             = "${var.subnet1_cidr}"
@@ -244,13 +241,13 @@ resource "aws_subnet" "demosubnet1" {
   tags = {
     Name = "Demo subnet 1"
   }
-}
+} */
 
 # Creating Security Group
 resource "aws_security_group" "demosg" {
   name        = "Demo Security Group"
   description = "Demo Module"
-  vpc_id      = "${aws_vpc.demovpc.id}"
+  vpc_id      = aws_vpc.demovpc.id
 
   # Inbound Rules
   # HTTP access from anywhere
@@ -284,7 +281,7 @@ resource "aws_security_group" "demosg" {
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
-  
+
   # Replication Port
   ingress {
     from_port   = 8089
@@ -317,31 +314,32 @@ resource "aws_security_group" "demosg" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
-}
 
-# Creating key pair
+
+
+  # Creating key pair
 resource "aws_key_pair" "demokey" {
   key_name   = "${var.key_name}"
   public_key = "${file(var.public_key)}"
 }
-  
-# Creating EC2 Instance
+
+  /* # Creating EC2 Instance
 resource "aws_instance" "demoinstance" {
 
   # AMI based on region 
-  ami = "${lookup(var.ami, var.aws_region)}"
+  ami = "${lookup(var.ami, var.aws_region)}" */
 
-  # Launching instance into subnet 
-  subnet_id = "${aws_subnet.demosubnet.id}"
+  /* # Launching instance into subnet 
+  subnet_id = aws_subnet.demosubnet.id */
 
-  # Instance type 
-  instance_type = "${var.instancetype}"
-  
+  /* # Instance type 
+  instance_type = var.instancetype */
+
   # Count of instance
-  count= "${var.master_count}"
-  
+  count = var.master_count
+
   # SSH key that we have generated above for connection
-  key_name = "${aws_key_pair.demokey.id}"
+  key_name = aws_key_pair.demokey.id
 
   # Attaching security group to our instance
   vpc_security_group_ids = ["${aws_security_group.demosg.id}"]
@@ -350,34 +348,34 @@ resource "aws_instance" "demoinstance" {
   tags = {
     Name = "Search-Head-${count.index + 1}"
   }
-  
-  # Root Block Storage
+
+  /* # Root Block Storage
   root_block_device {
     volume_size = "40"
     volume_type = "standard"
-  }
-  
-  #EBS Block Storage
+  } */
+
+  /* #EBS Block Storage
   ebs_block_device {
-    device_name = "/dev/sdb"
-    volume_size = "80"
-    volume_type = "standard"
+    device_name           = "/dev/sdb"
+    volume_size           = "80"
+    volume_type           = "standard"
     delete_on_termination = false
-  }
-  
+  } */
+
   # SSH into instance 
   connection {
-    
+
     # Host name
     host = self.public_ip
     # The default username for our AMI
     user = "ec2-user"
     # Private key for connection
-    private_key = "${file(var.private_key)}"
+    private_key = file(var.private_key)
     # Type of connection
     type = "ssh"
   }
-  
+
   # Installing splunk on newly created instance
   provisioner "remote-exec" {
     inline = [
@@ -389,7 +387,7 @@ resource "aws_instance" "demoinstance" {
       "sudo yum install -y git",
       "sudo chmod 666 /var/run/docker.sock",
       "docker pull dhruvin30/dhsoniweb:v1",
-      "docker run -d -p 80:80 dhruvin30/dhsoniweb:latest"   
-  ]
- }
+      "docker run -d -p 80:80 dhruvin30/dhsoniweb:latest"
+    ]
+  }
 }
