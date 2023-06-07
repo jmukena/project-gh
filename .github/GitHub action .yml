@@ -1,0 +1,31 @@
+name: Terraform-GitHub-Actions
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+env:
+  AWS_ACCESS_KEY_ID: ${{ AKIATRQSZNFY6DLDYHS3 }}
+  AWS_SECRET_ACCESS_KEY: ${{ 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 }}
+
+  build:
+    name: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+       
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v1
+      
+      - name: Terraform Init
+        id: init
+        run: terraform init
+      
+      - name: Terraform Plan
+        id: plan
+        run: terraform plan
+      
+      - name: Terraform Apply
+        id: apply
+        run: terraform apply --auto-approve
