@@ -5,8 +5,8 @@ on:
   pull_request:
     branches: [ main ]
 env:
-  AWS_ACCESS_KEY_ID: ${{ AKIATRQSZNFY6DLDYHS3 }}
-  AWS_SECRET_ACCESS_KEY: ${{ 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 }}
+  AWS_ACCESS_KEY_ID: ${{ secrets.aws_access_key }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.aws_secret_keysecrets.aws_secret_key }}
 
   build:
     name: build
