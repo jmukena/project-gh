@@ -338,8 +338,8 @@ resource "aws_instance" "demoinstance" {
   # Count of instance
   count = var.master_count
 
-  /* # SSH key that we have generated above for connection
-  key_name = aws_key_pair.demokey.id */
+  # SSH key that we have generated above for connection
+    Name = aws_key_pair.demokey.id
 
   # Attaching security group to our instance
   vpc_security_group_ids = ["${aws_security_group.demosg.id}"]
